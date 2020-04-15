@@ -1,7 +1,10 @@
+import processors.PHOSSFinderProcessor
+import processors.chemistry.MoleculeProcessor
+import processors.spectroscopy.BrukerProcessor
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.nio.file.Path
 
 fun String.isAlNum(): Boolean {
     return this.matches(Regex("[A-Za-z0-9_-]+"))
@@ -21,5 +24,16 @@ fun main() {
     println("PHOSS")
     println("-----")
 
-    File("./data").list()?.map { println(it) }
+    PHOSSFinderProcessor(Path.of("data")).process {dataset ->
+        dataset.openArchive()
+        MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).process {molecule ->
+            dataset.addMolecule(molecule)
+        }
+
+        BrukerProcessor(dataset, dataset.directory.resolve("nmr")).process { spectrum ->
+            dataset.addSpectrum(spectrum)
+        }
+
+        dataset.closeArchive()
+    }
 }

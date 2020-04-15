@@ -1,3 +1,5 @@
+import dataset.Code
+import dataset.PHOSSDataset
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -6,12 +8,11 @@ import java.lang.IllegalArgumentException
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
 
-internal class BSSFileTest {
+internal class PHOSSDatasetTest {
 
     @org.junit.jupiter.api.Test
     fun openArchive(@TempDir directory: Path) {
-        val bss = BSSFile()
-        bss.code = "TEST-ARCHIVE"
+        val bss = PHOSSDataset(directory, Code("TEST-ARCHIVE"))
         bss.outputDirectory = directory
         bss.openArchive()
         bss.closeArchive()
@@ -20,14 +21,13 @@ internal class BSSFileTest {
 
     @org.junit.jupiter.api.Test
     fun `valid and invalid codes are handled`() {
-        val bss = BSSFile()
-        bss.code = "TESTtest-01"
-        assertEquals("testtest-01", bss.code)
+        val bss = PHOSSDataset(Path.of("."), Code("TESTtest-01"))
+        assertEquals("testtest-01", bss.code.value)
 
-        val bssInvalid = BSSFile()
+
         assertThrows(
             IllegalArgumentException::class.java,
-            { bssInvalid.code = "TESTtest-01." }
+            { PHOSSDataset(Path.of("."), Code("TESTtest-01.")) }
         )
     }
 
@@ -37,8 +37,7 @@ internal class BSSFileTest {
 
     @org.junit.jupiter.api.Test
     fun addEntry(@TempDir directory: Path) {
-        val bss = BSSFile()
-        bss.code = "TEST-ARCHIVE"
+        val bss = PHOSSDataset(directory, Code("Test-archive"))
         bss.outputDirectory = directory
         bss.openArchive()
         bss.addEntry("test.txt", "Test")
@@ -52,8 +51,7 @@ internal class BSSFileTest {
 
     @org.junit.jupiter.api.Test
     fun addFile(@TempDir directory: Path) {
-        val bss = BSSFile()
-        bss.code = "TEST-ARCHIVE"
+        val bss = PHOSSDataset(directory, Code("TEST-ARCHIVE"))
         bss.outputDirectory = directory
         bss.openArchive()
         val newFileName = "${directory.toAbsolutePath()}/test.txt"
@@ -74,7 +72,7 @@ internal class BSSFileTest {
 
     @org.junit.jupiter.api.Test
     fun addNames() {
-        val bss = BSSFile()
+        val bss = PHOSSDataset(Path.of("."), Code("TEST-ARCHIVE"))
         bss.addName("Test")
         bss.addNames(listOf("Test", "Too"))
         assertTrue(bss.names == setOf("Test", "Too"))
