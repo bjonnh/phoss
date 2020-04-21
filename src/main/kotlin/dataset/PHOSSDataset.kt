@@ -1,12 +1,16 @@
 package dataset
 
+import helpers.createInputStreamSupplier
+import mu.KotlinLogging
+import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.nio.file.Path
 import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 
 data class DatasetReference(
@@ -22,19 +26,39 @@ data class OntologicalTerm(
 
 data class DatasetEntries(
     val molecules: MutableList<Molecule> = mutableListOf(),
-    val spectra: MutableList<Spectrum> = mutableListOf()
+    val spectra: MutableList<Spectrum> = mutableListOf(),
 )
+
+class Archive(fileName: String, var fastMode: Boolean) {
+    val zos: ZipArchiveOutputStream = ZipArchiveOutputStream(File(fileName))
+    val zipCreator: ParallelScatterZipCreator = ParallelScatterZipCreator()
+
+    fun addEntry(pathInArchive: String, content: InputStream) {
+        val entry = ZipArchiveEntry(pathInArchive)
+        entry.method = if (fastMode) {
+            ZipEntry.STORED
+        } else {
+            ZipEntry.DEFLATED
+        }
+        this.zipCreator.addArchiveEntry(entry, createInputStreamSupplier(content))
+    }
+
+    fun close() {
+        zipCreator.writeTo(zos)
+        zos.close()
+    }
+}
 
 data class PHOSSDataset(
     val directory: Path,
     val code: Code,
 ) {
     private val datasetEntries = DatasetEntries()
-
+    val logger = KotlinLogging.logger {}
     var fileName: String? = null
         private set
-    private var zipFile: ZipOutputStream? = null
-    private var zipFileStream: FileOutputStream? = null
+
+    var archive: Archive? = null
 
     private val datasetReferenceStore: MutableList<DatasetReference> = mutableListOf()
     private var depiction: Any? = null
@@ -49,59 +73,41 @@ data class PHOSSDataset(
 
     var outputDirectory: Path = Path.of(".")
         set(value) {
-            require(zipFile == null && zipFileStream == null) { "Directory cannot be changed once the archive is opened." }
+            require(archive == null) { "Directory cannot be changed once the archive is opened." }
             field = value
         }
 
-    fun openArchive() {
+    fun openArchive(fastMode: Boolean = false) {
         this.fileName = "${this.outputDirectory}/${this.code}.zip"
-        this.zipFileStream = FileOutputStream(this.fileName!!)
-        this.zipFile = ZipOutputStream(this.zipFileStream)
+        this.archive = Archive(this.fileName!!, fastMode)
     }
 
     fun closeArchive() {
-        this.zipFile?.close()
-        this.zipFileStream?.close()
+        this.archive?.close()
     }
 
     fun addDatasetReference(reference: DatasetReference) {
         this.datasetReferenceStore.add(reference)
     }
 
+    fun addEntry(pathInArchive: String, content: InputStream) {
+        require(this.archive != null)
+        this.archive?.addEntry(pathInArchive, content)
+    }
+
     fun addEntry(pathInArchive: String, content: String) {
-        require(this.zipFile != null)
-        val relativePath = this.directory.relativize(Path.of(pathInArchive))
-        val entry = ZipEntry(relativePath.toString())
-        this.zipFile?.putNextEntry(entry)
-        this.zipFile?.write(content.toByteArray())
+        this.addEntry(pathInArchive, IOUtils.toInputStream(content))
     }
 
     fun addFile(pathInArchive: String, sourcePath: Path) {
-        this.addFile(pathInArchive,
+        val relativePath = this.directory.relativize(Path.of(pathInArchive)).toString()
+        this.addEntry(relativePath,
             FileInputStream(sourcePath.toFile()))
-    }
-
-    fun addFile(pathInArchive: String, sourceFileName: String) {
-        this.addFile(pathInArchive,
-            FileInputStream(File(sourceFileName)))
-    }
-
-    fun addFile(pathInArchive: String, inputStream: InputStream) {
-        require(this.zipFile != null)
-        val relativePath = this.directory.relativize(Path.of(pathInArchive))
-        val entry = ZipEntry(relativePath.toString())
-        this.zipFile?.putNextEntry(entry)
-        val bytes = ByteArray(1024)
-        var length: Int
-        while (inputStream.read(bytes).also { length = it } >= 0) {
-            this.zipFile?.write(bytes, 0, length)
-        }
-        inputStream.close()
     }
 
     fun addName(name: String) = this.mutableNames.add(name)
     fun addNames(names: List<String>) = names.map { this.addName(it) }
 
-    fun addMolecule(molecule: Molecule) =this.datasetEntries.molecules.add(molecule)
-    fun addSpectrum(spectrum: Spectrum) =this.datasetEntries.spectra.add(spectrum)
+    fun addMolecule(molecule: Molecule) = this.datasetEntries.molecules.add(molecule)
+    fun addSpectrum(spectrum: Spectrum) = this.datasetEntries.spectra.add(spectrum)
 }
