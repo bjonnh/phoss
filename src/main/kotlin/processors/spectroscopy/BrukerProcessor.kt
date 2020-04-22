@@ -5,6 +5,7 @@ import dataset.Spectrum
 import helpers.findFile
 import helpers.recursiveApply
 import mu.KotlinLogging
+import processors.ProcessingException
 import processors.Processor
 import processors.ProcessorStatus
 import java.nio.file.Path
@@ -18,6 +19,7 @@ data class AcqusMetaData(
     var frequencies: MutableList<Float> = mutableListOf(),
 )
 
+typealias FilesAdd=Pair<String, Path>
 
 class BrukerProcessor(override val dataset: PHOSSDataset, private val directory: Path) : Processor<Spectrum> {
     override val logger = KotlinLogging.logger {}
@@ -27,6 +29,8 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
 
     private val filteredFiles = listOf("1r", "1i", "2rr", "2ri", "2ir", "2ii")
 
+    private val preAddFiles: MutableList<FilesAdd> = mutableListOf()
+
     fun cleanName(name: String) = name.replace(" ", "_")
 
     fun spectralType(path: Path): NMRSpectrumType {
@@ -35,14 +39,15 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
                 .exists()) -> NMRSpectrumType.S2D
             (path.resolve("fid").toFile().exists() || path.resolve("pdata/1r").toFile().exists()
                     || path.resolve("pdata/1i").toFile().exists()) -> NMRSpectrumType.S1D
-            else -> throw Exception("Unknown spectral type")
+            else -> throw ProcessingException("unknown spectral type")
         }
     }
 
     fun acqusMetaData(path: Path): AcqusMetaData {
         val metadata = AcqusMetaData()
-        println(path.resolve("acqus"))
-        path.resolve("acqus").toFile().readLines().map { line ->
+        val acqusFile = path.resolve("acqus").toFile()
+        if (!acqusFile.exists()) throw ProcessingException("'acqus' file not found")
+        acqusFile.readLines().map { line ->
             println(line)
             when {
                 line.startsWith("##\$BF") -> metadata.frequencies.add(line.split(" ")[1].toFloat())
@@ -53,39 +58,50 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
         return metadata
     }
 
-    override fun process(function: (Spectrum) -> Unit) {
-        directory.findFile("audita.txt", true).map { it.parent }.map { spectralPath ->
-            val relativePath = dataset.directory.relativize(spectralPath).toString()
-            logger.debug("Found a bruker dataset: $relativePath")
-            val description = spectralPath.resolve("pdata/1/title").toFile().readText()
-            val title = description.lines().first().trim()
+    private fun processDataset(spectralPath: Path): Spectrum {
+        val relativePath = dataset.directory.relativize(spectralPath).toString()
+        logger.debug("Found a bruker dataset: $relativePath")
+        val description = spectralPath.resolve("pdata/1/title").toFile()
+        if (!description.exists()) throw ProcessingException("no title file in the experiment")
+        val descriptionText = description.readText()
+        val title = descriptionText.lines().first().trim()
 
-            spectralPath.recursiveApply {
-                if (it.fileName.toString().toLowerCase() !in filteredFiles) {
-                    dataset.addFile(dataset.relPath(Path.of(cleanName(it.toString()))), it)
-                }
+        spectralPath.recursiveApply {
+            if (it.fileName.toString().toLowerCase() !in filteredFiles) {
+                preAddFiles.add(Pair(dataset.relPath(Path.of(cleanName(it.toString()))), it))
             }
-
-            val metadata = mutableMapOf<String, String>()
-            val spectralType = this.spectralType(spectralPath)
-            metadata["nmrType"] = spectralType.text
-            val frequencies = acqusMetaData(spectralPath).frequencies
-            metadata["frequencies"] = when (spectralType) {
-                NMRSpectrumType.S1D -> "${frequencies[0]} Mhz"
-                NMRSpectrumType.S2D -> frequencies.subList(0, 2).map { "$it MHz" }.joinToString(" ")
-            }
-
-            val spectrum = Spectrum(
-                title,
-                description,
-                "NMR",
-                cleanName(relativePath),
-                "",
-                metadata
-            )
-            function(spectrum)
         }
 
-        this.status = ProcessorStatus.FAILED
+        val metadata = mutableMapOf<String, String>()
+        val spectralType = this.spectralType(spectralPath)
+        metadata["nmrType"] = spectralType.text
+        val frequencies = acqusMetaData(spectralPath).frequencies
+        metadata["frequencies"] = when (spectralType) {
+            NMRSpectrumType.S1D -> "${frequencies[0]} Mhz"
+            NMRSpectrumType.S2D -> frequencies.subList(0, 2).map { "$it MHz" }.joinToString(" ")
+        }
+
+        return Spectrum(
+            title,
+            descriptionText,
+            "NMR",
+            cleanName(relativePath),
+            "",
+            metadata
+        )
+    }
+
+    override fun process(function: (Spectrum) -> Unit) {
+        directory.findFile("audita.txt", true).map { it.parent }.map { spectralPath ->
+            try {
+                val spectrum = processDataset(spectralPath)
+                preAddFiles.forEach { dataset.addFile(it.first, it.second) }
+                function(spectrum)
+            } catch (e: ProcessingException) {
+                dataset.statusUpdate(name, ProcessorStatus.WARNING, "${e.message} in directory $spectralPath")
+            }
+        }
+
+        this.status = ProcessorStatus.SUCCESSFUL
     }
 }

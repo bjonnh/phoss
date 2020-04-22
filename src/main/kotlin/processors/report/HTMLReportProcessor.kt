@@ -35,6 +35,9 @@ class HTMLReportProcessor(override val dataset: PHOSSDataset) : Processor<String
         context.put("molecules", dataset.molecules)
         context.put("spectra", dataset.spectra)
         context.put("processorsStatus", dataset.processorsStatus)
+        context.put("success", dataset.processorsStatus.count { it.status == ProcessorStatus.SUCCESSFUL })
+        context.put("warnings", dataset.processorsStatus.count { it.status == ProcessorStatus.WARNING })
+        context.put("failures", dataset.processorsStatus.count { it.status != ProcessorStatus.SUCCESSFUL && it.status != ProcessorStatus.WARNING })
         val writer = StringWriter()
         template.merge(context, writer)
 

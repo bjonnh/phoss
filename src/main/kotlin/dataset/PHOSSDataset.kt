@@ -29,7 +29,8 @@ data class PHOSSDatasetMetadata(
 data class ProcessorStatusDetail(
     val name: String,
     val status: ProcessorStatus,
-    val timestamp: String
+    val timestamp: String,
+    val message: String?
 )
 
 data class PHOSSDataset(
@@ -105,12 +106,13 @@ data class PHOSSDataset(
         this.statusUpdate(name, ProcessorStatus.FRESH)
     }
 
-    fun statusUpdate(name: String, status: ProcessorStatus) {
+    fun statusUpdate(name: String, status: ProcessorStatus, message: String? ="") {
         statusStore.add(
             ProcessorStatusDetail(
                 name,
                 status,
-                getDate()
+                getDate(),
+                message
             )
         )
     }

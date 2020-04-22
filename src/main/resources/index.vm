@@ -13,12 +13,29 @@
     </style>
 </head>
 <body>
-<div class="ui fixed inverted menu">
+<div class="ui fixed blue menu">
     <a class="item">$code</a>
     <a href="#metadata" class="item">Metadata</a>
     <a href="#molecules" class="item">Molecules</a>
     <a href="#spectra" class="item">Spectra</a>
-    <a href="#build" class="item">Build</a>
+    <div class="right menu">
+        <a href="#build" class="item">Build details</a>
+        <div class="item">
+        <a class="ui label small green" href="#build">
+            <i class="check icon"></i>$success
+        </a>
+        #if ($warnings)
+            <a class="ui label small yellow" href="#build">
+                <i class="exclamation icon"></i>$warnings
+            </a>
+        #end
+        #if ($failures)
+            <a class="ui label small red" href="#build">
+                <i class="exclamation triangle icon"></i>$failures
+            </a>
+        #end
+        </div>
+    </div>
 </div>
 <div class="ui main container">
     <h2 class="ui header"><a id="metadata">Metadata</a></h2>
@@ -116,27 +133,31 @@
     <a class="ui blue image label">Builder version
         <div class="detail">$version</div>
     </a>
-    <div class="ui relaxed divided list">
-        #foreach($status in $processorsStatus)
-            <div class="item">
-                #if ($status.status == "FRESH")
-                    #set ($icon = "snowflake cyan")
-                #elseif ($status.status == "SUCCESSFUL")
-                    #set ($icon = "check green")
-                #elseif ($status.status == "FAILED")
-                    #set ($icon = "exclamation triangle red")
-                #elseif ($status.status == "SKIPPED")
-                    #set ($icon = "fast forward blue")
-                #end
-
-                <i class="$icon icon"></i>
-                <div class="content">
-                    $status.name
-                    <div class="description">$status.timestamp </div>
-                </div>
-            </div>
+    #foreach($status in $processorsStatus)
+        #if ($status.status == "FRESH")
+            #set ($icon = "snowflake cyan")
+            #set ($color = "cyan")
+        #elseif ($status.status == "WARNING")
+            #set ($icon = "exclamation red")
+            #set ($color = "orange")
+        #elseif ($status.status == "SUCCESSFUL")
+            #set ($icon = "check green")
+            #set ($color = "green")
+        #elseif ($status.status == "FAILED")
+            #set ($icon = "exclamation triangle red")
+            #set ($color = "red inverted")
+        #elseif ($status.status == "SKIPPED")
+            #set ($icon = "fast forward blue")
+            #set ($color = "blue")
         #end
-    </div>
+        <div class="ui segment $color">
+
+
+            <i class="$icon icon"></i>
+            $status.name $status.message
+            <div class="description">$status.timestamp </div>
+        </div>
+    #end
 </div>
 <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </body>
