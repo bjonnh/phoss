@@ -13,6 +13,11 @@ data class DatasetEntries(
     val spectra: MutableList<Spectrum> = mutableListOf()
 )
 
+data class PHOSSDatasetMetadata(
+    val synonyms: List<String> = listOf(),
+    val creators: List<String> = listOf()
+)
+
 data class PHOSSDataset(
     val directory: Path,
     val code: Code
@@ -21,6 +26,8 @@ data class PHOSSDataset(
     val logger = KotlinLogging.logger {}
 
     var exporter: IExporter? = null
+
+    var metadata: PHOSSDatasetMetadata? = null
 
     var fileName: String? = null
         private set

@@ -3,6 +3,7 @@ import exporters.ZipExporter
 import mu.KotlinLogging
 import processors.PHOSSFinderProcessor
 import processors.chemistry.MoleculeProcessor
+import processors.metadata.PHOSSMetadataProcessor
 import processors.spectroscopy.BrukerProcessor
 import java.io.BufferedReader
 import java.io.InputStream
@@ -31,6 +32,8 @@ fun main() {
         //dataset.exporter = ZipExporter(Path.of("."), fastMode = true)
         dataset.exporter = DirExporter(Path.of("output"))
         dataset.open()
+        logger.info("Starting the metadata processor")
+        PHOSSMetadataProcessor(dataset, dataset.directory).process {}
 
         logger.info("Starting the molecule processor")
         MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).process {molecule ->

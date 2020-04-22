@@ -29,13 +29,19 @@
         </tr>
         <tr>
             <td>Synonyms</td>
-            <td>#foreach($synonym in $molecule.synonyms)
-            $synonym
-                #end</td>
+            <td>
+                #foreach($synonym in $metadata.synonyms)
+                    <div class="ui label blue">$synonym</div>
+                #end
+            </td>
         </tr>
         <tr>
-            <td>Creator</td>
-            <td>$creators</td>
+            <td>Creators</td>
+            <td>
+                #foreach($creator in $metadata.creators)
+                    <div class="ui label blue">$creator</div>
+                #end
+            </td>
         </tr>
         </tbody>
     </table>
@@ -83,12 +89,17 @@
 
     <h2 class="ui header"><a id="spectra">Spectra</a></h2>
     <div class="ui one column grid">
-
         #foreach($spectrum in $spectra)
             <div class="column">
                 <div class="ui fluid card">
                     <div class="content">
-                        <div class="header">$spectrum.type: $spectrum.title</div>
+                        <div class="header">
+                            $spectrum.type
+                            $spectrum.metadata.nmrType
+                            $spectrum.metadata.frequencies
+                            : <a href="$spectrum.path">$spectrum.title</a>
+
+                        </div>
                         <div class="description">
                             <pre>$spectrum.description</pre>
                         </div>
@@ -97,7 +108,6 @@
             </div>
         #end
     </div>
-
 </div>
 <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </body>
