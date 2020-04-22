@@ -9,7 +9,7 @@ import processors.ProcessorStatus
 
 
 
-class JSONReportProcessor(private val dataset: PHOSSDataset) : Processor<String> {
+class JSONReportProcessor(override val dataset: PHOSSDataset) : Processor<String> {
     override val logger = KotlinLogging.logger {}
 
     override val name: String = "JSONReportProcessor"
@@ -23,7 +23,8 @@ class JSONReportProcessor(private val dataset: PHOSSDataset) : Processor<String>
             code = dataset.code.value,
             metadata = dataset.metadata,
             molecules = dataset.molecules,
-            spectra = dataset.spectra
+            spectra = dataset.spectra,
+            processorsStatus = dataset.processorsStatus
         )
 
         function(Json(JsonConfiguration.Stable).stringify(Report.serializer(), report))

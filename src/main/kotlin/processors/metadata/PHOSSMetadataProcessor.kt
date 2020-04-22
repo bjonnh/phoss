@@ -8,7 +8,7 @@ import processors.Processor
 import processors.ProcessorStatus
 import java.nio.file.Path
 
-class PHOSSMetadataProcessor(private val dataset: PHOSSDataset, private val directory: Path) : Processor<String> {
+class PHOSSMetadataProcessor(override val dataset: PHOSSDataset, private val directory: Path) : Processor<String> {
     override val logger = KotlinLogging.logger {}
     override val name: String = "PHOSSMetadataProcessor"
     override val help: String = "Process PHOSS basic metadata entries"
@@ -22,5 +22,7 @@ class PHOSSMetadataProcessor(private val dataset: PHOSSDataset, private val dire
             path.toFile().readText().lines().map { it.trim() }.filter { it!=""}
         }
         dataset.metadata = PHOSSDatasetMetadata(synonyms, creators)
+
+        status = ProcessorStatus.SUCCESSFUL
     }
 }

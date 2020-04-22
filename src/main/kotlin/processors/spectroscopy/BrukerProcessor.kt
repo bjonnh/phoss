@@ -19,14 +19,13 @@ data class AcqusMetaData(
 )
 
 
-class BrukerProcessor(private val dataset: PHOSSDataset, private val directory: Path) : Processor<Spectrum> {
+class BrukerProcessor(override val dataset: PHOSSDataset, private val directory: Path) : Processor<Spectrum> {
     override val logger = KotlinLogging.logger {}
     override val name: String = "BrukerProcessor"
     override val help: String = "Process Bruker NMR datasets"
     override var status: ProcessorStatus = ProcessorStatus.FRESH
 
-    val filteredFiles = listOf("1r", "1i", "2rr", "2ri", "2ir", "2ii")
-
+    private val filteredFiles = listOf("1r", "1i", "2rr", "2ri", "2ir", "2ii")
 
     fun cleanName(name: String) = name.replace(" ", "_")
 
@@ -87,6 +86,6 @@ class BrukerProcessor(private val dataset: PHOSSDataset, private val directory: 
             function(spectrum)
         }
 
-        this.status = ProcessorStatus.SUCCESSFUL
+        this.status = ProcessorStatus.FAILED
     }
 }

@@ -17,7 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import javax.imageio.ImageIO
 
-class MoleculeProcessor(private val dataset: PHOSSDataset, private val directory: Path) : Processor<Molecule> {
+class MoleculeProcessor(override val dataset: PHOSSDataset, private val directory: Path) : Processor<Molecule> {
     override val logger = KotlinLogging.logger {}
 
     override val name: String = "MoleculeProcessor"

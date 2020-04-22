@@ -2,6 +2,7 @@ package processors.report
 
 import dataset.Molecule
 import dataset.PHOSSDatasetMetadata
+import dataset.ProcessorStatusDetail
 import dataset.Spectrum
 import kotlinx.serialization.Serializable
 
@@ -10,5 +11,6 @@ data class Report(
     val code: String,
     val metadata: PHOSSDatasetMetadata?,
     val molecules: List<Molecule>,
-    val spectra: List<Spectrum>
+    val spectra: List<Spectrum>,
+    val processorsStatus: List<ProcessorStatusDetail>
 )

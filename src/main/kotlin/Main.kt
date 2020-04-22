@@ -2,6 +2,7 @@ import exporters.DirExporter
 import exporters.ZipExporter
 import mu.KotlinLogging
 import processors.PHOSSFinderProcessor
+import processors.ProcessorStatus
 import processors.chemistry.MoleculeProcessor
 import processors.metadata.PHOSSMetadataProcessor
 import processors.report.JSONReportProcessor
@@ -34,25 +35,26 @@ fun main() {
         dataset.exporter = DirExporter(Path.of("output"))
         dataset.open()
         logger.info("Starting the metadata processor")
-        PHOSSMetadataProcessor(dataset, dataset.directory).process {}
+        PHOSSMetadataProcessor(dataset, dataset.directory).run {}
 
         logger.info("Starting the molecule processor")
-        MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).process {molecule ->
+        MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).run {molecule ->
             dataset.addMolecule(molecule)
         }
         logger.info("Starting the Bruker processor")
-        BrukerProcessor(dataset, dataset.directory.resolve("nmr")).process { spectrum ->
+        BrukerProcessor(dataset, dataset.directory.resolve("nmr")).run { spectrum ->
             dataset.addSpectrum(spectrum)
         }
         logger.info("Generating HTML report")
-        HTMLReportProcessor(dataset).process { report ->
+        HTMLReportProcessor(dataset).run { report ->
             dataset.addEntry("index.html", report)
         }
         logger.info("Generating JSON report")
-        JSONReportProcessor(dataset).process { report ->
+        JSONReportProcessor(dataset).run { report ->
             dataset.addEntry("index.json", report)
         }
         logger.info("Closing archive")
+        dataset.statusUpdate("PHOSSFinder", ProcessorStatus.SUCCESSFUL)
         dataset.close()
     }
     logger.info("Done")

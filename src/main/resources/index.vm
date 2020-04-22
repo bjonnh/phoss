@@ -18,6 +18,7 @@
     <a href="#metadata" class="item">Metadata</a>
     <a href="#molecules" class="item">Molecules</a>
     <a href="#spectra" class="item">Spectra</a>
+    <a href="#build" class="item">Build</a>
 </div>
 <div class="ui main container">
     <h2 class="ui header"><a id="metadata">Metadata</a></h2>
@@ -103,6 +104,35 @@
                             <pre>$spectrum.description</pre>
                         </div>
                     </div>
+                </div>
+            </div>
+        #end
+    </div>
+
+    <h2 class="ui header"><a id="build">Build</a></h2>
+    <a class="ui blue image label">Date
+        <div class="detail">$date</div>
+    </a>
+    <a class="ui blue image label">Builder version
+        <div class="detail">$version</div>
+    </a>
+    <div class="ui relaxed divided list">
+        #foreach($status in $processorsStatus)
+            <div class="item">
+                #if ($status.status == "FRESH")
+                    #set ($icon = "snowflake cyan")
+                #elseif ($status.status == "SUCCESSFUL")
+                    #set ($icon = "check green")
+                #elseif ($status.status == "FAILED")
+                    #set ($icon = "exclamation triangle red")
+                #elseif ($status.status == "SKIPPED")
+                    #set ($icon = "fast forward blue")
+                #end
+
+                <i class="$icon icon"></i>
+                <div class="content">
+                    $status.name
+                    <div class="description">$status.timestamp </div>
                 </div>
             </div>
         #end

@@ -30,4 +30,7 @@ class PHOSSFinderProcessor(var directory: Path): Processor<PHOSSDataset> {
         }
         this.status = ProcessorStatus.SUCCESSFUL
     }
+
+    // As it is the first plugin of the serie and it is the one creating the dataset, it doesn't exist yet…
+    override val dataset: PHOSSDataset? = null
 }

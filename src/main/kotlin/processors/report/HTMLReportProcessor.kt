@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class HTMLReportProcessor(private val dataset: PHOSSDataset) : Processor<String> {
+class HTMLReportProcessor(override val dataset: PHOSSDataset) : Processor<String> {
     override val logger = KotlinLogging.logger {}
 
     override val name: String = "HTMLReportProcessor"
@@ -31,9 +31,10 @@ class HTMLReportProcessor(private val dataset: PHOSSDataset) : Processor<String>
         context.put("code", dataset.code.value)
         context.put("metadata", dataset.metadata)
         context.put("version", "0.0.1-SNAPSHOT")
-        context.put("date", SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(Calendar.getInstance().time))
+        context.put("date", getDate())
         context.put("molecules", dataset.molecules)
         context.put("spectra", dataset.spectra)
+        context.put("processorsStatus", dataset.processorsStatus)
         val writer = StringWriter()
         template.merge(context, writer)
 
