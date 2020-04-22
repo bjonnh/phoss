@@ -13,20 +13,9 @@ import java.nio.file.Path
 import java.util.zip.ZipEntry
 
 
-data class DatasetReference(
-    val name: String,
-)
-
-data class OntologicalTerm(
-    val subject: String,
-    val predicate: String,
-    val obj: String,
-)
-
-
 data class DatasetEntries(
     val molecules: MutableList<Molecule> = mutableListOf(),
-    val spectra: MutableList<Spectrum> = mutableListOf(),
+    val spectra: MutableList<Spectrum> = mutableListOf()
 )
 
 class Archive(fileName: String, var fastMode: Boolean) {
@@ -51,7 +40,7 @@ class Archive(fileName: String, var fastMode: Boolean) {
 
 data class PHOSSDataset(
     val directory: Path,
-    val code: Code,
+    val code: Code
 ) {
     private val datasetEntries = DatasetEntries()
     val logger = KotlinLogging.logger {}
@@ -59,10 +48,6 @@ data class PHOSSDataset(
         private set
 
     var archive: Archive? = null
-
-    private val datasetReferenceStore: MutableList<DatasetReference> = mutableListOf()
-    private var depiction: Any? = null
-    private val ontologyStore: MutableList<OntologicalTerm> = mutableListOf()
 
     private val mutableNames: MutableSet<String> = mutableSetOf()
 
@@ -77,6 +62,9 @@ data class PHOSSDataset(
             field = value
         }
 
+    val molecules get() = this.datasetEntries.molecules
+    val spectra get() = this.datasetEntries.spectra
+
     fun openArchive(fastMode: Boolean = false) {
         this.fileName = "${this.outputDirectory}/${this.code}.zip"
         this.archive = Archive(this.fileName!!, fastMode)
@@ -84,10 +72,6 @@ data class PHOSSDataset(
 
     fun closeArchive() {
         this.archive?.close()
-    }
-
-    fun addDatasetReference(reference: DatasetReference) {
-        this.datasetReferenceStore.add(reference)
     }
 
     fun addEntry(pathInArchive: String, content: InputStream) {
@@ -98,6 +82,8 @@ data class PHOSSDataset(
     fun addEntry(pathInArchive: String, content: String) {
         this.addEntry(pathInArchive, IOUtils.toInputStream(content))
     }
+
+    fun relPath(path: Path) = this.directory.relativize(path).toString()
 
     fun addFile(pathInArchive: String, sourcePath: Path) {
         val relativePath = this.directory.relativize(Path.of(pathInArchive)).toString()
