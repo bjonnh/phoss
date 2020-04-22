@@ -86,8 +86,7 @@ data class PHOSSDataset(
     fun relPath(path: Path) = this.directory.relativize(path).toString()
 
     fun addFile(pathInArchive: String, sourcePath: Path) {
-        val relativePath = this.directory.relativize(Path.of(pathInArchive)).toString()
-        this.addEntry(relativePath,
+        this.addEntry(pathInArchive,
             FileInputStream(sourcePath.toFile()))
     }
 
