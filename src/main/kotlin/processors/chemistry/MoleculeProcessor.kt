@@ -60,7 +60,7 @@ class MoleculeProcessor(private val dataset: PHOSSDataset, private val directory
             }
 
             ImageIO.write(depiction.toImg(), "png", stream)
-            dataset.addEntry("${moleculeMolPath.parent}/molecule.png",
+            dataset.addEntry("${dataset.relPath(moleculeMolPath.parent)}/molecule.png",
                 ByteArrayInputStream(stream.toByteArray()))
 
             // Adding names
