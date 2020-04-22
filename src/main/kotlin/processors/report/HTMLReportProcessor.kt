@@ -32,6 +32,7 @@ class HTMLReportProcessor(private val dataset: PHOSSDataset) : Processor<String>
         context.put("version", "0.0.1-SNAPSHOT")
         context.put("date", SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(Calendar.getInstance().time))
         context.put("molecules", dataset.molecules)
+        context.put("spectra", dataset.spectra)
         val writer = StringWriter()
         template.merge(context, writer)
 

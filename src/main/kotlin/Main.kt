@@ -1,3 +1,5 @@
+import exporters.DirExporter
+import exporters.ZipExporter
 import mu.KotlinLogging
 import processors.PHOSSFinderProcessor
 import processors.chemistry.MoleculeProcessor
@@ -26,7 +28,10 @@ fun main() {
     logger.info("-----")
 
     PHOSSFinderProcessor(Path.of("data").toAbsolutePath()).process {dataset ->
-        dataset.openArchive(fastMode=true)
+        //dataset.exporter = ZipExporter(Path.of("."), fastMode = true)
+        dataset.exporter = DirExporter(Path.of("output"))
+        dataset.open()
+
         logger.info("Starting the molecule processor")
         MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).process {molecule ->
             dataset.addMolecule(molecule)
@@ -40,7 +45,7 @@ fun main() {
             dataset.addEntry("index.html", report)
         }
         logger.info("Closing archive")
-        dataset.closeArchive()
+        dataset.close()
     }
     logger.info("Done")
 }

@@ -1,16 +1,11 @@
 package dataset
 
-import helpers.createInputStreamSupplier
+import exporters.IExporter
 import mu.KotlinLogging
-import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.apache.commons.io.IOUtils
-import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.zip.ZipEntry
 
 
 data class DatasetEntries(
@@ -18,36 +13,17 @@ data class DatasetEntries(
     val spectra: MutableList<Spectrum> = mutableListOf()
 )
 
-class Archive(fileName: String, var fastMode: Boolean) {
-    val zos: ZipArchiveOutputStream = ZipArchiveOutputStream(File(fileName))
-    val zipCreator: ParallelScatterZipCreator = ParallelScatterZipCreator()
-
-    fun addEntry(pathInArchive: String, content: InputStream) {
-        val entry = ZipArchiveEntry(pathInArchive)
-        entry.method = if (fastMode) {
-            ZipEntry.STORED
-        } else {
-            ZipEntry.DEFLATED
-        }
-        this.zipCreator.addArchiveEntry(entry, createInputStreamSupplier(content))
-    }
-
-    fun close() {
-        zipCreator.writeTo(zos)
-        zos.close()
-    }
-}
-
 data class PHOSSDataset(
     val directory: Path,
     val code: Code
 ) {
     private val datasetEntries = DatasetEntries()
     val logger = KotlinLogging.logger {}
+
+    var exporter: IExporter? = null
+
     var fileName: String? = null
         private set
-
-    var archive: Archive? = null
 
     private val mutableNames: MutableSet<String> = mutableSetOf()
 
@@ -56,27 +32,13 @@ data class PHOSSDataset(
             return setOf(*this.mutableNames.toTypedArray())
         }
 
-    var outputDirectory: Path = Path.of(".")
-        set(value) {
-            require(archive == null) { "Directory cannot be changed once the archive is opened." }
-            field = value
-        }
-
     val molecules get() = this.datasetEntries.molecules
     val spectra get() = this.datasetEntries.spectra
 
-    fun openArchive(fastMode: Boolean = false) {
-        this.fileName = "${this.outputDirectory}/${this.code}.zip"
-        this.archive = Archive(this.fileName!!, fastMode)
-    }
-
-    fun closeArchive() {
-        this.archive?.close()
-    }
 
     fun addEntry(pathInArchive: String, content: InputStream) {
-        require(this.archive != null)
-        this.archive?.addEntry(pathInArchive, content)
+        require(this.exporter != null) { "This dataset has no exporter."}
+        this.exporter?.addEntry(pathInArchive, content)
     }
 
     fun addEntry(pathInArchive: String, content: String) {
@@ -95,4 +57,19 @@ data class PHOSSDataset(
 
     fun addMolecule(molecule: Molecule) = this.datasetEntries.molecules.add(molecule)
     fun addSpectrum(spectrum: Spectrum) = this.datasetEntries.spectra.add(spectrum)
+
+    /**
+     * Open the exporter
+     */
+    fun open() {
+        require (this.exporter != null) { "Cannot open a non existing exporter."}
+        this.exporter?.open(this.code.value)
+    }
+
+    /**
+     * Close the exporter
+     */
+    fun close() {
+        this.exporter?.close()
+    }
 }
