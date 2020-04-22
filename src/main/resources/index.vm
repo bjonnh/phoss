@@ -98,7 +98,6 @@
                             $spectrum.metadata.nmrType
                             $spectrum.metadata.frequencies
                             : <a href="$spectrum.path">$spectrum.title</a>
-
                         </div>
                         <div class="description">
                             <pre>$spectrum.description</pre>

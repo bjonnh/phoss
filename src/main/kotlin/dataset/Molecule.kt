@@ -1,5 +1,9 @@
 package dataset
 
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
+
+@Serializable
 data class Molecule(
     val names: List<String>,
     val inchi: String,

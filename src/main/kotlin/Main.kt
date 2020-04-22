@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import processors.PHOSSFinderProcessor
 import processors.chemistry.MoleculeProcessor
 import processors.metadata.PHOSSMetadataProcessor
+import processors.report.JSONReportProcessor
 import processors.spectroscopy.BrukerProcessor
 import java.io.BufferedReader
 import java.io.InputStream
@@ -46,6 +47,10 @@ fun main() {
         logger.info("Generating HTML report")
         HTMLReportProcessor(dataset).process { report ->
             dataset.addEntry("index.html", report)
+        }
+        logger.info("Generating JSON report")
+        JSONReportProcessor(dataset).process { report ->
+            dataset.addEntry("index.json", report)
         }
         logger.info("Closing archive")
         dataset.close()

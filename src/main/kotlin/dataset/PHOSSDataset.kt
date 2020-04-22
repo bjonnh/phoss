@@ -6,6 +6,8 @@ import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
 import java.io.InputStream
 import java.nio.file.Path
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
 
 data class DatasetEntries(
@@ -13,6 +15,7 @@ data class DatasetEntries(
     val spectra: MutableList<Spectrum> = mutableListOf()
 )
 
+@Serializable
 data class PHOSSDatasetMetadata(
     val synonyms: List<String> = listOf(),
     val creators: List<String> = listOf()

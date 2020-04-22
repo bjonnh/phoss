@@ -1,6 +1,7 @@
 plugins {
     java
     kotlin("jvm") version "1.4-M1"
+    kotlin("plugin.serialization") version "1.4-M1"
 }
 
 group = "net.nprod"
@@ -21,6 +22,7 @@ dependencies {
     implementation("org.apache.velocity", "velocity-engine-core", "2.2")
     implementation("org.apache.velocity.tools", "velocity-tools-generic", "3.0")
     testImplementation("org.junit.jupiter", "junit-jupiter", "5.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     //implementation("org.jetbrains.kotlinx", "kotlinx-html-jvm", "0.7.1") // We keep that until kotlin compiler bug corrected
 }
 

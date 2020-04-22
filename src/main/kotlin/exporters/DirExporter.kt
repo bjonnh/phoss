@@ -13,12 +13,14 @@ import java.nio.file.Path
  * @param path Location of the output directory
  */
 class DirExporter(var path: Path): IExporter {
+    private var outputPath: Path? = null
     override fun open(code: String) {
-        path.resolve(code).toFile().mkdir()
+        outputPath = path.resolve(code)
+        outputPath?.toFile()?.mkdir()
     }
 
     override fun addEntry(pathInArchive: String, content: InputStream) {
-        val filePath = path.resolve(pathInArchive)
+        val filePath = outputPath?.resolve(pathInArchive) ?: throw Exception("Invalid Path")
         filePath.parent.toFile().mkdirs()
         FileUtils.copyInputStreamToFile(content, filePath.toFile())
     }
