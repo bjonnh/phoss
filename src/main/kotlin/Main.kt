@@ -35,6 +35,10 @@ fun main() {
         BrukerProcessor(dataset, dataset.directory.resolve("nmr")).process { spectrum ->
             dataset.addSpectrum(spectrum)
         }
+        logger.info("Generating HTML report")
+        HTMLReportProcessor(dataset).process { report ->
+            dataset.addEntry("index.html", report)
+        }
         logger.info("Closing archive")
         dataset.closeArchive()
     }
