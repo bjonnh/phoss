@@ -53,14 +53,15 @@ internal class PHOSSDatasetTest {
     @org.junit.jupiter.api.Test
     fun addFile(@TempDir directory: Path) {
         File("${directory.toAbsolutePath()}/test").mkdir()
-        val bss = PHOSSDataset(directory, Code("TEST-ARCHIVE"))
-        bss.outputDirectory = directory
-        bss.openArchive()
+        val dataset = PHOSSDataset(directory, Code("TEST-ARCHIVE"))
+        dataset.outputDirectory = directory
+        dataset.openArchive()
         val newFileName = "${directory.toAbsolutePath()}/test/test.txt"
         File(newFileName).printWriter(). use { out-> out.println("TestAddFile") }
-        bss.addFile(directory.findFile("test.txt").first().toString(), directory.findFile("test.txt").first())
-        bss.closeArchive()
-        val zipInputStream = ZipInputStream(FileInputStream(bss.fileName))
+        val pathTest = directory.findFile("test.txt").first()
+        dataset.addFile(dataset.relPath(pathTest), pathTest)
+        dataset.closeArchive()
+        val zipInputStream = ZipInputStream(FileInputStream(dataset.fileName))
         val entry = zipInputStream.nextEntry
         assertEquals("test/test.txt", entry.name)
         val content = zipInputStream.getTxtFile()
