@@ -7,6 +7,7 @@ import processors.chemistry.MoleculeProcessor
 import processors.metadata.PHOSSMetadataProcessor
 import processors.report.JSONReportProcessor
 import processors.spectroscopy.BrukerProcessor
+import processors.spectroscopy.JeolProcessor
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -41,8 +42,12 @@ fun main() {
         MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).run {molecule ->
             dataset.addMolecule(molecule)
         }
-        logger.info("Starting the Bruker processor")
+        /*logger.info("Starting the Bruker processor")
         BrukerProcessor(dataset, dataset.directory.resolve("nmr")).run { spectrum ->
+            dataset.addSpectrum(spectrum)
+        }*/
+        logger.info("Starting the Jeol processor")
+        JeolProcessor(dataset, dataset.directory.resolve("nmr")).run { spectrum ->
             dataset.addSpectrum(spectrum)
         }
         logger.info("Generating HTML report")

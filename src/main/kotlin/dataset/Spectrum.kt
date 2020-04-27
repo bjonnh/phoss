@@ -9,6 +9,6 @@ data class Spectrum(
     val description: String,
     val type: String,
     val path: String,
-    val depiction: String?,
+    val depiction: String? = null,
     val metadata: Map<String, String> = mapOf()
 )

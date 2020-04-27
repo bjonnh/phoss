@@ -10,11 +10,6 @@ import processors.Processor
 import processors.ProcessorStatus
 import java.nio.file.Path
 
-enum class NMRSpectrumType(val text: String) {
-    S1D("1D"),
-    S2D("2D")
-}
-
 data class AcqusMetaData(
     var frequencies: MutableList<Float> = mutableListOf(),
 )
@@ -31,19 +26,19 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
 
     private val preAddFiles: MutableList<FilesAdd> = mutableListOf()
 
-    fun cleanName(name: String) = name.replace(" ", "_")
+    private fun cleanName(name: String) = name.replace(" ", "_")
 
-    fun spectralType(path: Path): NMRSpectrumType {
+    private fun spectralType(path: Path): NMRSpectrumType {
         return when {
             (path.resolve("ser").toFile().exists() || path.resolve("pdata/2rr").toFile()
                 .exists()) -> NMRSpectrumType.S2D
             (path.resolve("fid").toFile().exists() || path.resolve("pdata/1r").toFile().exists()
                     || path.resolve("pdata/1i").toFile().exists()) -> NMRSpectrumType.S1D
-            else -> throw ProcessingException("unknown spectral type")
+            else -> throw ProcessingException("unsupported spectral type")
         }
     }
 
-    fun acqusMetaData(path: Path): AcqusMetaData {
+    private fun acqusMetaData(path: Path): AcqusMetaData {
         val metadata = AcqusMetaData()
         val acqusFile = path.resolve("acqus").toFile()
         if (!acqusFile.exists()) throw ProcessingException("'acqus' file not found")
@@ -78,7 +73,7 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
         val frequencies = acqusMetaData(spectralPath).frequencies
         metadata["frequencies"] = when (spectralType) {
             NMRSpectrumType.S1D -> "${frequencies[0]} Mhz"
-            NMRSpectrumType.S2D -> frequencies.subList(0, 2).map { "$it MHz" }.joinToString(" ")
+            NMRSpectrumType.S2D -> frequencies.subList(0, 2).joinToString(" ") { "$it MHz" }
         }
 
         return Spectrum(
@@ -97,6 +92,7 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
                 val spectrum = processDataset(spectralPath)
                 preAddFiles.forEach { dataset.addFile(it.first, it.second) }
                 function(spectrum)
+                preAddFiles.clear()
             } catch (e: ProcessingException) {
                 dataset.statusUpdate(name, ProcessorStatus.WARNING, "${e.message} in directory $spectralPath")
             }

@@ -1,6 +1,9 @@
 package helpers
 
-import java.nio.file.Path
+import java.io.IOException
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
+
 
 fun Path.recursiveApply(function: (Path) -> Unit) {
     val filesList = this.toFile().listFiles()
@@ -24,5 +27,31 @@ fun Path.findFile(name: String, recursive: Boolean = true): List<Path> {
             matchingPaths.add(fil.toPath())
         }
     }
+    return matchingPaths
+}
+
+/**
+ * Find a file with the matching glob in the given location
+ *
+ * a glob can be glob:\*\*\/\*.jdf  for finding jdf files recursively
+ */
+fun Path.findFileMatch(glob: String?): List<Path> {
+    val matchingPaths = mutableListOf<Path>()
+    val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+    Files.walkFileTree(this, object : SimpleFileVisitor<Path>() {
+        override fun visitFile(
+            path: Path,
+            attrs: BasicFileAttributes,
+        ): FileVisitResult {
+            if (pathMatcher.matches(path)) {
+                matchingPaths.add(path)
+            }
+            return FileVisitResult.CONTINUE
+        }
+
+        override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+            return FileVisitResult.CONTINUE
+        }
+    })
     return matchingPaths
 }
