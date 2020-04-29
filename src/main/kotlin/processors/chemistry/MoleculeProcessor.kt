@@ -10,6 +10,7 @@ import org.openscience.cdk.inchi.InChIGeneratorFactory
 import org.openscience.cdk.io.MDLV2000Reader
 import org.openscience.cdk.smiles.SmiFlavor
 import org.openscience.cdk.smiles.SmilesGenerator
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import processors.Processor
 import processors.ProcessorStatus
 import java.io.ByteArrayInputStream
@@ -28,7 +29,7 @@ class MoleculeProcessor(override val dataset: PHOSSDataset, private val director
 
     private val inchiGeneratorFactory = InChIGeneratorFactory.getInstance()
 
-    private val depictionGenerator = DepictionGenerator().withSize(256.0, 256.0).withAtomColors()
+    private val depictionGenerator = DepictionGenerator().withSize(128.0, 128.0).withAtomColors()
 
     private fun getNames(path: Path): List<String> {
         return path.findFile("names.txt", false).first().toFile().readLines().map { it.trim() }
@@ -44,7 +45,7 @@ class MoleculeProcessor(override val dataset: PHOSSDataset, private val director
 
             val inchiGenerator = inchiGeneratorFactory.getInChIGenerator(atomContainer, "")
             val smiles = SmilesGenerator(SmiFlavor.Absolute).create(atomContainer)
-
+            AtomContainerManipulator.suppressHydrogens(atomContainer)
             val depiction = depictionGenerator.depict(atomContainer)
             dataset.addEntry("${dataset.relPath(moleculeMolPath.parent)}/molecule.svg",
                 depiction.toSvgStr())
@@ -73,7 +74,7 @@ class MoleculeProcessor(override val dataset: PHOSSDataset, private val director
                 inchiGenerator.inchiKey,
                 smiles,
                 dataset.directory.relativize(moleculeMolPath.parent).toString(),
-                dataset.directory.relativize(moleculeMolPath.parent).toString() + "/molecule.png"
+                dataset.directory.relativize(moleculeMolPath.parent).toString() + "/molecule.svg"
             )
 
             function(molecule)

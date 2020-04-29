@@ -53,6 +53,7 @@ fun main() {
         logger.info("Generating HTML report")
         HTMLReportProcessor(dataset).run { report ->
             dataset.addEntry("index.html", report)
+            dataset.addEntry("script.js", "\$(document).ready(function () { \$('.ui.accordion').accordion();});")
         }
         logger.info("Generating JSON report")
         JSONReportProcessor(dataset).run { report ->
