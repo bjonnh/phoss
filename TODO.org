@@ -1,0 +1,5 @@
+* TODO Increase picture size and allow for zoom in UI :back:front:
+* TODO Textbox for smiles, and allow copy with a button :front:
+* TODO Jeol Support
+- [ ] Extract nuclei
+- [ ] Extract sequence name?

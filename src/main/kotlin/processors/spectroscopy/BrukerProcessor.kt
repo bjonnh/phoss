@@ -9,6 +9,7 @@ import processors.ProcessingException
 import processors.Processor
 import processors.ProcessorStatus
 import java.nio.file.Path
+import kotlin.math.roundToInt
 
 data class AcqusMetaData(
     var frequencies: MutableList<Float> = mutableListOf(),
@@ -43,11 +44,9 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
         val acqusFile = path.resolve("acqus").toFile()
         if (!acqusFile.exists()) throw ProcessingException("'acqus' file not found")
         acqusFile.readLines().map { line ->
-            println(line)
             when {
                 line.startsWith("##\$BF") -> metadata.frequencies.add(line.split(" ")[1].toFloat())
-                else -> {
-                }
+                else -> {}
             }
         }
         return metadata
@@ -71,9 +70,10 @@ class BrukerProcessor(override val dataset: PHOSSDataset, private val directory:
         val spectralType = this.spectralType(spectralPath)
         metadata["nmrType"] = spectralType.text
         val frequencies = acqusMetaData(spectralPath).frequencies
+        metadata["frequencies_raw"] = frequencies.joinToString(" ")
         metadata["frequencies"] = when (spectralType) {
-            NMRSpectrumType.S1D -> "${frequencies[0]} Mhz"
-            NMRSpectrumType.S2D -> frequencies.subList(0, 2).joinToString(" ") { "$it MHz" }
+            NMRSpectrumType.S1D -> "${frequencies[0].roundToInt()} Mhz"
+            NMRSpectrumType.S2D -> frequencies.subList(0, 2).joinToString(" ") { "${it.roundToInt()} MHz" }
         }
 
         return Spectrum(

@@ -42,10 +42,10 @@ fun main() {
         MoleculeProcessor(dataset, dataset.directory.resolve("molecules")).run {molecule ->
             dataset.addMolecule(molecule)
         }
-        /*logger.info("Starting the Bruker processor")
+        logger.info("Starting the Bruker processor")
         BrukerProcessor(dataset, dataset.directory.resolve("nmr")).run { spectrum ->
             dataset.addSpectrum(spectrum)
-        }*/
+        }
         logger.info("Starting the Jeol processor")
         JeolProcessor(dataset, dataset.directory.resolve("nmr")).run { spectrum ->
             dataset.addSpectrum(spectrum)

@@ -79,7 +79,7 @@
                                 <tr>
                                     <td>Names:</td>
                                     <td>#foreach($name in $molecule.names)
-                            $name
+                                        <div class="ui label blue">$name</div>
                             #end</td>
                                 </tr>
                                 <tr>
